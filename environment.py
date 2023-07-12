@@ -192,11 +192,11 @@ class Environment:
 
         self.update_states()
 
-        print("printing both states")
-        print("Robot 1 state")
-        print(self.s_r1)
-        print("Robot 2 state")
-        print(self.s_r2)
+        #print("printing both states")
+        #print("Robot 1 state")
+        #print(self.s_r1)
+        #print("Robot 2 state")
+        #print(self.s_r2)
 
         done = self.check_end()
         reward = -1
