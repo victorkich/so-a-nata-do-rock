@@ -28,7 +28,7 @@ class SAC(nn.Module):
         self.gamma = 0.99
         self.tau = 0.005
         hidden_size = 256
-        learning_rate = 0.0003
+        learning_rate = 0.0000003
         self.clip_grad_param = 1
 
         self.target_entropy = -action_size  # -dim(A)
