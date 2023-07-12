@@ -173,7 +173,7 @@ class Environment:
         print(self.s_r2)
 
         done = self.check_end()
-        reward = -1
+        reward = 0
         if done:
             reward = 10
 
