@@ -4,9 +4,8 @@ import torch
 import wandb
 import argparse
 from buffer import ReplayBuffer
-import glob
 from utils import save
-from Environment import yamabiko
+from Environment import environment
 import random
 from agent import SAC
 
@@ -14,8 +13,7 @@ from agent import SAC
 def get_config():
     parser = argparse.ArgumentParser(description='RL')
     parser.add_argument("--run_name", type=str, default="SAC", help="Run name, default: SAC")
-    parser.add_argument("--env", type=str, default="CartPole-v0", help="Gym environment name, default: CartPole-v0")
-    parser.add_argument("--episodes", type=int, default=100, help="Number of episodes, default: 100")
+    parser.add_argument("--episodes", type=int, default=10000, help="Number of episodes, default: 100")
     parser.add_argument("--buffer_size", type=int, default=100_000, help="Maximal training dataset size, default: 100_000")
     parser.add_argument("--seed", type=int, default=1, help="Seed, default: 1")
     parser.add_argument("--log_video", type=int, default=0, help="Log agent behaviour to wanbd when set to 1, default: 0")
@@ -30,7 +28,7 @@ def train(config):
     np.random.seed(config.seed)
     random.seed(config.seed)
     torch.manual_seed(config.seed)
-    env = yamabiko()
+    env = environment()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     steps = 0

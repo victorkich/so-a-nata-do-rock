@@ -37,13 +37,11 @@ class SAC(nn.Module):
         self.alpha = self.log_alpha.exp().detach()
         self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=learning_rate) 
                 
-        # Actor Network 
-
+        # Actor Network
         self.actor_local = Actor(state_size, action_size, hidden_size).to(device)
         self.actor_optimizer = optim.Adam(self.actor_local.parameters(), lr=learning_rate)     
         
         # Critic Network (w/ Target Network)
-
         self.critic1 = Critic(state_size, action_size, hidden_size, 2).to(device)
         self.critic2 = Critic(state_size, action_size, hidden_size, 1).to(device)
         
