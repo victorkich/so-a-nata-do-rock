@@ -225,19 +225,34 @@ class Environment:
     def update_states(self):
         # updating states
         self.s_r1 = map_matrix.copy()
-        self.s_r1[self.spot1.pos[0]][self.spot1.pos[1]] = 3
-        self.s_r1[self.spot2.pos[0]][self.spot2.pos[1]] = 3
+        self.s_r1[self.spot1.pos[0]][self.spot1.pos[1]] = 2
+        self.s_r1[self.spot2.pos[0]][self.spot2.pos[1]] = 2
         self.s_r2 = self.s_r1.copy()
 
-        if not (self.robot1.ordered and not self.robot1.spot):
-            self.s_r1[self.target.pos[0]][self.target.pos[1]] = 2
-        self.s_r1[self.robot1.pos[0]][self.robot1.pos[1]] = 7
-        self.s_r1[self.robot2.pos[0]][self.robot2.pos[1]] = 8
 
-        if not (self.robot2.ordered and not self.robot2.spot):
-            self.s_r2[self.target.pos[0]][self.target.pos[1]] = 2
-        self.s_r2[self.robot1.pos[0]][self.robot1.pos[1]] = 8
-        self.s_r2[self.robot2.pos[0]][self.robot2.pos[1]] = 7
+        self.ordered = False
+        self.spot = False
+        self.delivered = False
+
+        if not self.robot1.ordered:
+            self.s_r1[self.target.pos[0]][self.target.pos[1]] = 3
+        elif not self.robot1.spot:
+            self.s_r1[self.target.pos[0]][self.target.pos[1]] = 4
+        else:
+            self.s_r1[self.target.pos[0]][self.target.pos[1]] = 5
+
+        self.s_r1[self.robot1.pos[0]][self.robot1.pos[1]] = 6
+        self.s_r1[self.robot2.pos[0]][self.robot2.pos[1]] = 7
+
+        if not self.robot2.ordered:
+            self.s_r2[self.target.pos[0]][self.target.pos[1]] = 3
+        elif not self.robot2.spot:
+            self.s_r2[self.target.pos[0]][self.target.pos[1]] = 4
+        else:
+            self.s_r2[self.target.pos[0]][self.target.pos[1]] = 5
+
+        self.s_r2[self.robot1.pos[0]][self.robot1.pos[1]] = 7
+        self.s_r2[self.robot2.pos[0]][self.robot2.pos[1]] = 6
 
         self.s_r1 = self.s_r1.flatten()
         self.s_r1 = np.append(self.s_r1, DIRECTIONS_ANN[self.robot1.direction])
@@ -257,13 +272,6 @@ class Environment:
         else:
             return False
 
-        """
-        self.target.check_facing(self.robot1)
-        self.target.check_facing(self.robot2)
-        self.spot1.check_facing(self.robot1)
-        self.spot1.check_facing(self.robot2)
-        self.spot2.check_facing(self.robot1)
-        self.spot2.check_facing(self.robot2)"""
 
     def reset(self):
         # Cria os robôs, o alvo e os pontos
