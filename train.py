@@ -53,7 +53,7 @@ def train(config):
             episode_steps = 0
             a1_rewards = 0
             a2_rewards = 0
-            while True:
+            for _ in range(200):
                 a1_action = a1.get_action(a1_state)
                 a2_action = a2.get_action(a1_state)
                 steps += 1
