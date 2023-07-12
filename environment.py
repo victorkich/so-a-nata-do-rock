@@ -173,19 +173,19 @@ class Environment:
         print(self.s_r2)
 
         done = self.check_end()
-        reward = 0
+        reward = -1
         if done:
-            reward = 10
+            reward = 100
 
         self.display_gamescreen()
 
         if robot_id == 1:
-            return (self.s_r1, reward, done)
+            return self.s_r1, reward, done
         elif robot_id == 2:
-            return (self.s_r2, reward, done)
+            return self.s_r2, reward, done
 
     def update_states(self):
-        #updating states
+        # updating states
         self.s_r1 = map_matrix.copy()
         self.s_r1[self.spot1.pos[0]][self.spot1.pos[1]] = 3
         self.s_r1[self.spot2.pos[0]][self.spot2.pos[1]] = 3
@@ -213,7 +213,7 @@ class Environment:
         # Cria os robôs, o alvo e os pontos
         self.robot1 = Robot(self.get_random_position(1, BOARD_SIZE - 2), RED, RIGHT)
         self.r2_pos = self.get_random_position(1, BOARD_SIZE - 2)
-        #in order to not start at same position
+        # in order to not start at same position
         while self.r2_pos == self.robot1.pos:
             self.r2_pos = self.get_random_position(1, BOARD_SIZE - 2)
         self.robot2 = Robot(self.r2_pos, BLUE, LEFT)
