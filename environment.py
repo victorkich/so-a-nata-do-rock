@@ -202,18 +202,18 @@ class Environment:
         reward = -1
         # se conseguir completar tudo
         if done:
-            reward = 100
+            reward = 200
         # se bateu na parede ou no amiguinho
         elif collided:
             #done = True
-            reward = -5
+            reward = -2
         else:
             if robot_id == 1:
                 if self.check_facings(self.robot1):
-                    reward = 5
+                    reward = 100
             elif robot_id == 2:
                 if self.check_facings(self.robot2):
-                    reward = 5
+                    reward = 100
 
         self.display_gamescreen()
 
