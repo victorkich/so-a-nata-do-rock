@@ -28,15 +28,15 @@ class SAC(nn.Module):
         self.gamma = 0.99
         self.tau = 0.005
         hidden_size = 256
-        learning_rate = 0.0000003
+        learning_rate = 0.0003
         self.clip_grad_param = 1
 
         self.target_entropy = -action_size  # -dim(A)
 
         self.log_alpha = torch.tensor([0.0], requires_grad=True)
         self.alpha = self.log_alpha.exp().detach()
-        self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=learning_rate) 
-                
+        self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=0.0000003)
+
         # Actor Network
         self.actor_local = Actor(state_size, action_size, hidden_size).to(device)
         self.actor_optimizer = optim.Adam(self.actor_local.parameters(), lr=learning_rate)     

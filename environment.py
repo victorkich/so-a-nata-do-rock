@@ -206,7 +206,7 @@ class Environment:
         # se bateu na parede ou no amiguinho
         elif collided:
             #done = True
-            reward = -2
+            reward = -1
         else:
             if robot_id == 1:
                 if self.check_facings(self.robot1):
