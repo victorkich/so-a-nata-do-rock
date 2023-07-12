@@ -5,7 +5,7 @@ import wandb
 import argparse
 from buffer import ReplayBuffer
 from utils import save
-from Environment import environment
+from environment import Environment
 import random
 from agent import SAC
 
@@ -28,7 +28,7 @@ def train(config):
     np.random.seed(config.seed)
     random.seed(config.seed)
     torch.manual_seed(config.seed)
-    env = environment()
+    env = Environment()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     steps = 0
@@ -47,8 +47,9 @@ def train(config):
         #    env = gym.wrappers.Monitor(env, './video', video_callable=lambda x: x%10==0, force=True)
 
         for i in range(1, config.episodes+1):
-            a1_state = env.get_state(id=1)
-            a2_state = env.get_state(id=2)
+            env.reset()
+            a1_state = env.get_state(robot_id=1)
+            a2_state = env.get_state(robot_id=2)
             episode_steps = 0
             a1_rewards = 0
             a2_rewards = 0
@@ -56,14 +57,16 @@ def train(config):
                 a1_action = a1.get_action(a1_state)
                 a2_action = a2.get_action(a1_state)
                 steps += 1
-                a1_next_state, a1_reward, a1_done = env.step(a1_action, id=1)
-                a2_next_state, a2_reward, a2_done = env.step(a2_action, id=2)
+                a1_next_state, a1_reward, a1_done = env.step(a1_action, robot_id=1)
+                a2_next_state, a2_reward, a2_done = env.step(a2_action, robot_id=2)
                 a1_buffer.add(a1_state, a1_action, a1_reward, a1_next_state, a1_done)
                 a2_buffer.add(a2_state, a2_action, a2_reward, a2_next_state, a2_done)
-                a1_policy_loss, a1_alpha_loss, a1_bellmann_error1, a1_bellmann_error2, a1_current_alpha = a1.learn(
-                    steps, a1_buffer.sample(), gamma=0.99)
-                a2_policy_loss, a2_alpha_loss, a2_bellmann_error1, a2_bellmann_error2, a2_current_alpha = a2.learn(
-                    steps, a2_buffer.sample(), gamma=0.99)
+                if a1_buffer.__len__() >= config.batch_size:
+                    a1_policy_loss, a1_alpha_loss, a1_bellmann_error1, a1_bellmann_error2, a1_current_alpha = a1.learn(
+                        steps, a1_buffer.sample(), gamma=0.99)
+                if a2_buffer.__len__() >= config.batch_size:
+                    a2_policy_loss, a2_alpha_loss, a2_bellmann_error1, a2_bellmann_error2, a2_current_alpha = a2.learn(
+                        steps, a2_buffer.sample(), gamma=0.99)
                 a1_state = a1_next_state
                 a2_state = a2_next_state
                 a1_rewards += a1_reward
@@ -75,10 +78,11 @@ def train(config):
             a1_average10.append(a1_rewards)
             a2_average10.append(a2_rewards)
             total_steps += episode_steps
-            print("Agent 1 -- Episode: {} | Reward: {} | Polciy Loss: {} | Steps: {}".format(i, a1_rewards, a1_policy_loss, steps))
-            print("Agent 2 -- Episode: {} | Reward: {} | Polciy Loss: {} | Steps: {}".format(i, a2_rewards, a2_policy_loss, steps))
-            
-            wandb.log({"Agent 1 Reward": a1_rewards,
+
+            if a1_buffer.__len__() >= config.batch_size:
+                print("Agent 1 -- Episode: {} | Reward: {} | Policy Loss: {} | Steps: {}".format(i, a1_rewards,
+                                                                                                 a1_policy_loss, steps))
+                wandb.log({"Agent 1 Reward": a1_rewards,
                        "Agent 1 Average10": np.mean(a1_average10),
                        "Agent 1 Steps": total_steps,
                        "Agent 1 Policy Loss": a1_policy_loss,
@@ -90,7 +94,10 @@ def train(config):
                        "Agent 1 Episode": i,
                        "Agent 1 Buffer size": a1_buffer.__len__()})
 
-            wandb.log({"Agent 2 Reward": a2_rewards,
+            if a2_buffer.__len__() >= config.batch_size:
+                print("Agent 2 -- Episode: {} | Reward: {} | Policy Loss: {} | Steps: {}".format(i, a2_rewards,
+                                                                                                 a2_policy_loss, steps))
+                wandb.log({"Agent 2 Reward": a2_rewards,
                        "Agent 2 Average10": np.mean(a2_average10),
                        "Agent 2 Steps": total_steps,
                        "Agent 2 Policy Loss": a2_policy_loss,

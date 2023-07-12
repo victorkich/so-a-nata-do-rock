@@ -130,7 +130,7 @@ class Spot:
                     self.color = (self.color[0]-self.color[0]/10, self.color[1]-self.color[1]/10, self.color[2]-self.color[2]/10)
 
 class Environment:
-    def __init__(self, pos, color):
+    def __init__(self):
         # Cria os robôs, o alvo e os pontos
         self.robot1 = Robot(self.get_random_position(1, BOARD_SIZE - 2), RED, RIGHT)
         self.r2_pos = self.get_random_position(1, BOARD_SIZE - 2)
@@ -145,22 +145,22 @@ class Environment:
         self.s_r1 = []
         self.s_r2 = []
         self.update_states()
-
+        self.display_gamescreen()
 
     def step(self, action, robot_id):
         if robot_id == 1:
-            if action.index(1) == 0:
+            if action == 0:
                 self.robot1.move_forward(self.robot2)
-            elif action.index(1) == 1:
+            elif action == 1:
                 self.robot1.turn_right()
-            elif action.index(1) == 2:
+            elif action == 2:
                 self.robot1.turn_left()
         elif robot_id == 2:
-            if action.index(1) == 0:
+            if action == 0:
                 self.robot2.move_forward(self.robot1)
-            elif action.index(1) == 1:
+            elif action == 1:
                 self.robot2.turn_right()
-            elif action.index(1) == 2:
+            elif action == 2:
                 self.robot2.turn_left()
 
         self.update_states()
