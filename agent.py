@@ -10,11 +10,7 @@ import copy
 class SAC(nn.Module):
     """Interacts with and learns from the environment."""
     
-    def __init__(self,
-                        state_size,
-                        action_size,
-                        device
-                ):
+    def __init__(self, state_size, action_size, device):
         """Initialize an Agent object.
         
         Params
@@ -31,7 +27,7 @@ class SAC(nn.Module):
         
         self.gamma = 0.99
         self.tau = 1e-2
-        hidden_size = 256
+        hidden_size = 64
         learning_rate = 5e-4
         self.clip_grad_param = 1
 
@@ -41,13 +37,11 @@ class SAC(nn.Module):
         self.alpha = self.log_alpha.exp().detach()
         self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=learning_rate) 
                 
-        # Actor Network 
-
+        # Actor Network
         self.actor_local = Actor(state_size, action_size, hidden_size).to(device)
         self.actor_optimizer = optim.Adam(self.actor_local.parameters(), lr=learning_rate)     
         
         # Critic Network (w/ Target Network)
-
         self.critic1 = Critic(state_size, action_size, hidden_size, 2).to(device)
         self.critic2 = Critic(state_size, action_size, hidden_size, 1).to(device)
         
@@ -62,7 +56,6 @@ class SAC(nn.Module):
         self.critic1_optimizer = optim.Adam(self.critic1.parameters(), lr=learning_rate)
         self.critic2_optimizer = optim.Adam(self.critic2.parameters(), lr=learning_rate) 
 
-    
     def get_action(self, state):
         """Returns actions for given state as per current policy."""
         state = torch.from_numpy(state).float().to(self.device)
@@ -76,8 +69,8 @@ class SAC(nn.Module):
 
         q1 = self.critic1(states)   
         q2 = self.critic2(states)
-        min_Q = torch.min(q1,q2)
-        actor_loss = (action_probs * (alpha * log_pis - min_Q )).sum(1).mean()
+        min_Q = torch.min(q1, q2)
+        actor_loss = (action_probs * (alpha * log_pis - min_Q)).sum(1).mean()
         log_action_pi = torch.sum(log_pis * action_probs, dim=1)
         return actor_loss, log_action_pi
     
