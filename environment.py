@@ -126,7 +126,7 @@ class Target:
                 self.color = (self.color[0] - self.color[0] / 10, self.color[1] - self.color[1] / 10,
                               self.color[2] - self.color[2] / 10)
                 return True
-            elif robot.ordered and robot.spot:
+            elif robot.ordered and robot.spot and not robot.delivered:
                 robot.delivered = True
                 self.color = (self.color[0] - self.color[0] / 10, self.color[1] - self.color[1] / 10,
                               self.color[2] - self.color[2] / 10)
