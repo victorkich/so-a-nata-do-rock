@@ -8,7 +8,8 @@ import torch.nn.functional as F
 def hidden_init(layer):
     fan_in = layer.weight.data.size()[0]
     lim = 1. / np.sqrt(fan_in)
-    return (-lim, lim)
+    return -lim, lim
+
 
 class Actor(nn.Module):
     """Actor (Policy) Model."""
@@ -31,7 +32,6 @@ class Actor(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, state):
-
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
         action_probs = self.softmax(self.fc3(x))

@@ -1,7 +1,3 @@
-
-
-import gym
-import pybullet_envs
 import numpy as np
 from collections import deque
 import torch
@@ -9,9 +5,11 @@ import wandb
 import argparse
 from buffer import ReplayBuffer
 import glob
-from utils import save, collect_random
+from utils import save
+from Environment import yamabiko
 import random
 from agent import SAC
+
 
 def get_config():
     parser = argparse.ArgumentParser(description='RL')
@@ -27,78 +25,96 @@ def get_config():
     args = parser.parse_args()
     return args
 
+
 def train(config):
     np.random.seed(config.seed)
     random.seed(config.seed)
     torch.manual_seed(config.seed)
-    env = gym.make(config.env)
-    
-    env.seed(config.seed)
-    env.action_space.seed(config.seed)
+    env = yamabiko()
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    
     steps = 0
-    average10 = deque(maxlen=10)
+    a1_average10 = deque(maxlen=10)
+    a2_average10 = deque(maxlen=10)
     total_steps = 0
     
     with wandb.init(project="SAC_Discrete", name=config.run_name, config=config):
-        
-        agent = SAC(state_size=env.observation_space.shape[0],
-                         action_size=env.action_space.n,
-                         device=device)
+        a1 = SAC(state_size=53, action_size=4, device=device)
+        a2 = SAC(state_size=53, action_size=4, device=device)
 
-        wandb.watch(agent, log="gradients", log_freq=10)
-
-        buffer = ReplayBuffer(buffer_size=config.buffer_size, batch_size=config.batch_size, device=device)
+        a1_buffer = ReplayBuffer(buffer_size=config.buffer_size, batch_size=config.batch_size, device=device)
+        a2_buffer = ReplayBuffer(buffer_size=config.buffer_size, batch_size=config.batch_size, device=device)
         
-        collect_random(env=env, dataset=buffer, num_samples=10000)
-        
-        if config.log_video:
-            env = gym.wrappers.Monitor(env, './video', video_callable=lambda x: x%10==0, force=True)
+        # if config.log_video:
+        #    env = gym.wrappers.Monitor(env, './video', video_callable=lambda x: x%10==0, force=True)
 
         for i in range(1, config.episodes+1):
-            state = env.reset()
+            a1_state = env.get_state(id=1)
+            a2_state = env.get_state(id=2)
             episode_steps = 0
-            rewards = 0
+            a1_rewards = 0
+            a2_rewards = 0
             while True:
-                action = agent.get_action(state)
+                a1_action = a1.get_action(a1_state)
+                a2_action = a2.get_action(a1_state)
                 steps += 1
-                next_state, reward, done, _ = env.step(action)
-                buffer.add(state, action, reward, next_state, done)
-                policy_loss, alpha_loss, bellmann_error1, bellmann_error2, current_alpha = agent.learn(steps, buffer.sample(), gamma=0.99)
-                state = next_state
-                rewards += reward
+                a1_next_state, a1_reward, a1_done = env.step(a1_action, id=1)
+                a2_next_state, a2_reward, a2_done = env.step(a2_action, id=2)
+                a1_buffer.add(a1_state, a1_action, a1_reward, a1_next_state, a1_done)
+                a2_buffer.add(a2_state, a2_action, a2_reward, a2_next_state, a2_done)
+                a1_policy_loss, a1_alpha_loss, a1_bellmann_error1, a1_bellmann_error2, a1_current_alpha = a1.learn(
+                    steps, a1_buffer.sample(), gamma=0.99)
+                a2_policy_loss, a2_alpha_loss, a2_bellmann_error1, a2_bellmann_error2, a2_current_alpha = a2.learn(
+                    steps, a2_buffer.sample(), gamma=0.99)
+                a1_state = a1_next_state
+                a2_state = a2_next_state
+                a1_rewards += a1_reward
+                a2_rewards += a2_reward
                 episode_steps += 1
-                if done:
+                if a1_done and a2_done:
                     break
 
-            
-
-            average10.append(rewards)
+            a1_average10.append(a1_rewards)
+            a2_average10.append(a2_rewards)
             total_steps += episode_steps
-            print("Episode: {} | Reward: {} | Polciy Loss: {} | Steps: {}".format(i, rewards, policy_loss, steps,))
+            print("Agent 1 -- Episode: {} | Reward: {} | Polciy Loss: {} | Steps: {}".format(i, a1_rewards, a1_policy_loss, steps))
+            print("Agent 2 -- Episode: {} | Reward: {} | Polciy Loss: {} | Steps: {}".format(i, a2_rewards, a2_policy_loss, steps))
             
-            wandb.log({"Reward": rewards,
-                       "Average10": np.mean(average10),
-                       "Steps": total_steps,
-                       "Policy Loss": policy_loss,
-                       "Alpha Loss": alpha_loss,
-                       "Bellmann error 1": bellmann_error1,
-                       "Bellmann error 2": bellmann_error2,
-                       "Alpha": current_alpha,
-                       "Steps": steps,
-                       "Episode": i,
-                       "Buffer size": buffer.__len__()})
+            wandb.log({"Agent 1 Reward": a1_rewards,
+                       "Agent 1 Average10": np.mean(a1_average10),
+                       "Agent 1 Steps": total_steps,
+                       "Agent 1 Policy Loss": a1_policy_loss,
+                       "Agent 1 Alpha Loss": a1_alpha_loss,
+                       "Agent 1 Bellmann error 1": a1_bellmann_error1,
+                       "Agent 1 Bellmann error 2": a1_bellmann_error2,
+                       "Agent 1 Alpha": a1_current_alpha,
+                       "Agent 1 Steps": steps,
+                       "Agent 1 Episode": i,
+                       "Agent 1 Buffer size": a1_buffer.__len__()})
 
-            if (i %10 == 0) and config.log_video:
-                mp4list = glob.glob('video/*.mp4')
-                if len(mp4list) > 1:
-                    mp4 = mp4list[-2]
-                    wandb.log({"gameplays": wandb.Video(mp4, caption='episode: '+str(i-10), fps=4, format="gif"), "Episode": i})
+            wandb.log({"Agent 2 Reward": a2_rewards,
+                       "Agent 2 Average10": np.mean(a2_average10),
+                       "Agent 2 Steps": total_steps,
+                       "Agent 2 Policy Loss": a2_policy_loss,
+                       "Agent 2 Alpha Loss": a2_alpha_loss,
+                       "Agent 2 Bellmann error 1": a2_bellmann_error1,
+                       "Agent 2 Bellmann error 2": a2_bellmann_error2,
+                       "Agent 2 Alpha": a2_current_alpha,
+                       "Agent 2 Steps": steps,
+                       "Agent 2 Episode": i,
+                       "Agent 2 Buffer size": a2_buffer.__len__()})
+
+            # if (i % 10 == 0) and config.log_video:
+            #    mp4list = glob.glob('video/*.mp4')
+            #    if len(mp4list) > 1:
+            #        mp4 = mp4list[-2]
+            #        wandb.log({"gameplays": wandb.Video(mp4, caption='episode:
+            #        '+str(i-10), fps=4, format="gif"), "Episode": i})
 
             if i % config.save_every == 0:
-                save(config, save_name="SAC_discrete", model=agent.actor_local, wandb=wandb, ep=0)
+                save(config, save_name="a1_SAC_discrete", model=a1.actor_local, wandb=wandb, ep=0)
+                save(config, save_name="a2_SAC_discrete", model=a2.actor_local, wandb=wandb, ep=0)
+
 
 if __name__ == "__main__":
     config = get_config()
