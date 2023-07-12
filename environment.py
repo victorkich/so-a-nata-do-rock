@@ -20,7 +20,7 @@ RIGHT = 1
 DOWN = 2
 LEFT = 3
 
-DIRECTIONS_ANN = [[0,0], [0,1], [1,0], [1,1]]
+DIRECTIONS_ANN = [[0, 0], [0, 1], [1, 0], [1, 1]]
 
 # Define o tamanho do tabuleiro e dos quadrados
 BOARD_SIZE = 7
@@ -55,6 +55,7 @@ def close_position_and_facing(p1, p2, direction):
             return True
     return False
 
+
 class Robot:
     def __init__(self, pos, color, direction):
         self.pos = list(pos)
@@ -65,15 +66,25 @@ class Robot:
         self.delivered = False
 
     def draw(self):
-        pygame.draw.circle(screen, self.color, (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE//2, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE//2), SQUARE_SIZE//2 - 5)
+        pygame.draw.circle(screen, self.color,
+                           (self.pos[0] * SQUARE_SIZE + SQUARE_SIZE // 2, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE // 2),
+                           SQUARE_SIZE // 2 - 5)
         if self.direction == UP:
-            pygame.draw.line(screen, self.color, (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE//2, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE//2), (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE//2, self.pos[1]*SQUARE_SIZE), 6)
+            pygame.draw.line(screen, self.color, (
+            self.pos[0] * SQUARE_SIZE + SQUARE_SIZE // 2, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE // 2),
+                             (self.pos[0] * SQUARE_SIZE + SQUARE_SIZE // 2, self.pos[1] * SQUARE_SIZE), 6)
         elif self.direction == RIGHT:
-            pygame.draw.line(screen, self.color, (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE//2, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE//2), (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE//2), 6)
+            pygame.draw.line(screen, self.color, (
+            self.pos[0] * SQUARE_SIZE + SQUARE_SIZE // 2, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE // 2),
+                             (self.pos[0] * SQUARE_SIZE + SQUARE_SIZE, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE // 2), 6)
         elif self.direction == DOWN:
-            pygame.draw.line(screen, self.color, (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE//2, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE//2), (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE//2, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE), 6)
+            pygame.draw.line(screen, self.color, (
+            self.pos[0] * SQUARE_SIZE + SQUARE_SIZE // 2, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE // 2),
+                             (self.pos[0] * SQUARE_SIZE + SQUARE_SIZE // 2, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE), 6)
         elif self.direction == LEFT:
-            pygame.draw.line(screen, self.color, (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE//2, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE//2), (self.pos[0]*SQUARE_SIZE, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE//2), 6)
+            pygame.draw.line(screen, self.color, (
+            self.pos[0] * SQUARE_SIZE + SQUARE_SIZE // 2, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE // 2),
+                             (self.pos[0] * SQUARE_SIZE, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE // 2), 6)
 
     def move_forward(self, other_robot):
         new_pos = self.pos.copy()
@@ -87,6 +98,9 @@ class Robot:
             new_pos[0] -= 1
         if map_matrix[new_pos[1], new_pos[0]] == 1 and new_pos != other_robot.pos:
             self.pos = new_pos
+        else:
+            collided = True
+            return collided
 
     def turn_right(self):
         self.direction = (self.direction + 1) % 4
@@ -94,22 +108,29 @@ class Robot:
     def turn_left(self):
         self.direction = (self.direction - 1) % 4
 
+
 class Target:
     def __init__(self, pos, color):
         self.pos = pos
         self.color = color
 
     def draw(self):
-        pygame.draw.circle(screen, self.color, (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE//2, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE//2), SQUARE_SIZE//2 - 5)
+        pygame.draw.circle(screen, self.color,
+                           (self.pos[0] * SQUARE_SIZE + SQUARE_SIZE // 2, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE // 2),
+                           SQUARE_SIZE // 2 - 5)
 
-    def check_collision(self, robot):
+    def check_facing(self, robot):
         if close_position_and_facing(self.pos, robot.pos, robot.direction):
             if not robot.ordered:
                 robot.ordered = True
-                self.color = (self.color[0]-self.color[0]/10, self.color[1]-self.color[1]/10, self.color[2]-self.color[2]/10)
+                self.color = (self.color[0] - self.color[0] / 10, self.color[1] - self.color[1] / 10,
+                              self.color[2] - self.color[2] / 10)
+                return True
             elif robot.ordered and robot.spot:
                 robot.delivered = True
-                self.color = (self.color[0]-self.color[0]/10, self.color[1]-self.color[1]/10, self.color[2]-self.color[2]/10)
+                self.color = (self.color[0] - self.color[0] / 10, self.color[1] - self.color[1] / 10,
+                              self.color[2] - self.color[2] / 10)
+                return True
 
 
 class Spot:
@@ -119,22 +140,27 @@ class Spot:
         self.touched = False
 
     def draw(self):
-        pygame.draw.circle(screen, self.color, (self.pos[0]*SQUARE_SIZE + SQUARE_SIZE//2, self.pos[1]*SQUARE_SIZE + SQUARE_SIZE//2), SQUARE_SIZE//2 - 5)
+        pygame.draw.circle(screen, self.color,
+                           (self.pos[0] * SQUARE_SIZE + SQUARE_SIZE // 2, self.pos[1] * SQUARE_SIZE + SQUARE_SIZE // 2),
+                           SQUARE_SIZE // 2 - 5)
 
-    def check_collision(self, robot):
+    def check_facing(self, robot):
         if not self.touched and not robot.spot:
             if close_position_and_facing(self.pos, robot.pos, robot.direction):
                 if robot.ordered:
                     self.touched = True
                     robot.spot = True
-                    self.color = (self.color[0]-self.color[0]/10, self.color[1]-self.color[1]/10, self.color[2]-self.color[2]/10)
+                    self.color = (self.color[0] - self.color[0] / 10, self.color[1] - self.color[1] / 10,
+                                  self.color[2] - self.color[2] / 10)
+                    return True
+
 
 class Environment:
     def __init__(self):
         # Cria os robôs, o alvo e os pontos
         self.robot1 = Robot(self.get_random_position(1, BOARD_SIZE - 2), RED, RIGHT)
         self.r2_pos = self.get_random_position(1, BOARD_SIZE - 2)
-        #in order to not start at same position
+        # in order to not start at same position
         while self.r2_pos == self.robot1.pos:
             self.r2_pos = self.get_random_position(1, BOARD_SIZE - 2)
         self.robot2 = Robot(self.r2_pos, BLUE, LEFT)
@@ -148,16 +174,17 @@ class Environment:
         self.display_gamescreen()
 
     def step(self, action, robot_id):
+        collided = False
         if robot_id == 1:
             if action == 0:
-                self.robot1.move_forward(self.robot2)
+                collided = self.robot1.move_forward(self.robot2)
             elif action == 1:
                 self.robot1.turn_right()
             elif action == 2:
                 self.robot1.turn_left()
         elif robot_id == 2:
             if action == 0:
-                self.robot2.move_forward(self.robot1)
+                collided = self.robot2.move_forward(self.robot1)
             elif action == 1:
                 self.robot2.turn_right()
             elif action == 2:
@@ -166,7 +193,6 @@ class Environment:
         self.update_states()
 
         print("printing both states")
-
         print("Robot 1 state")
         print(self.s_r1)
         print("Robot 2 state")
@@ -174,8 +200,20 @@ class Environment:
 
         done = self.check_end()
         reward = -1
+        # se conseguir completar tudo
         if done:
             reward = 100
+        # se bateu na parede ou no amiguinho
+        elif collided:
+            #done = True
+            reward = -5
+        else:
+            if robot_id == 1:
+                if self.check_facings(self.robot1):
+                    reward = 5
+            elif robot_id == 2:
+                if self.check_facings(self.robot2):
+                    reward = 5
 
         self.display_gamescreen()
 
@@ -209,6 +247,24 @@ class Environment:
         self.s_r2 = np.append(self.s_r2, DIRECTIONS_ANN[self.robot2.direction])
         self.s_r2 = np.append(self.s_r2, DIRECTIONS_ANN[self.robot1.direction])
 
+    def check_facings(self, robot):
+        c1 = self.target.check_facing(robot)
+        c2 = self.spot1.check_facing(robot)
+        c3 = self.spot2.check_facing(robot)
+        if c1 or c2 or c3:
+            print("ECOSTO AQUI")
+            return True
+        else:
+            return False
+
+        """
+        self.target.check_facing(self.robot1)
+        self.target.check_facing(self.robot2)
+        self.spot1.check_facing(self.robot1)
+        self.spot1.check_facing(self.robot2)
+        self.spot2.check_facing(self.robot1)
+        self.spot2.check_facing(self.robot2)"""
+
     def reset(self):
         # Cria os robôs, o alvo e os pontos
         self.robot1 = Robot(self.get_random_position(1, BOARD_SIZE - 2), RED, RIGHT)
@@ -226,7 +282,7 @@ class Environment:
         if robot_id == 1:
             return self.s_r1
         elif robot_id == 2:
-            return  self.s_r2
+            return self.s_r2
 
     # Função para desenhar o tabuleiro
     def draw_board(self):
@@ -269,11 +325,5 @@ class Environment:
         self.target.draw()
         self.spot1.draw()
         self.spot2.draw()
-        self.target.check_collision(self.robot1)
-        self.target.check_collision(self.robot2)
-        self.spot1.check_collision(self.robot1)
-        self.spot1.check_collision(self.robot2)
-        self.spot2.check_collision(self.robot1)
-        self.spot2.check_collision(self.robot2)
 
         pygame.display.flip()

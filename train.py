@@ -48,30 +48,32 @@ def train(config):
 
         for i in range(1, config.episodes+1):
             env.reset()
-            a1_state = env.get_state(robot_id=1)
-            a2_state = env.get_state(robot_id=2)
+
             episode_steps = 0
             a1_rewards = 0
             a2_rewards = 0
             for _ in range(1000):
+                a1_state = env.get_state(robot_id=1)
                 a1_action = a1.get_action(a1_state)
-                a2_action = a2.get_action(a1_state)
                 steps += 1
                 a1_next_state, a1_reward, a1_done = env.step(a1_action, robot_id=1)
-                a2_next_state, a2_reward, a2_done = env.step(a2_action, robot_id=2)
                 a1_buffer.add(a1_state, a1_action, a1_reward, a1_next_state, a1_done)
-                a2_buffer.add(a2_state, a2_action, a2_reward, a2_next_state, a2_done)
                 if a1_buffer.__len__() >= config.batch_size:
                     a1_policy_loss, a1_alpha_loss, a1_bellmann_error1, a1_bellmann_error2, a1_current_alpha = a1.learn(
                         steps, a1_buffer.sample(), gamma=0.99)
+
+                a2_state = env.get_state(robot_id=2)
+                a2_action = a2.get_action(a2_state)
+                a2_next_state, a2_reward, a2_done = env.step(a2_action, robot_id=2)
+                a2_buffer.add(a2_state, a2_action, a2_reward, a2_next_state, a2_done)
                 if a2_buffer.__len__() >= config.batch_size:
                     a2_policy_loss, a2_alpha_loss, a2_bellmann_error1, a2_bellmann_error2, a2_current_alpha = a2.learn(
                         steps, a2_buffer.sample(), gamma=0.99)
-                a1_state = a1_next_state
-                a2_state = a2_next_state
+
                 a1_rewards += a1_reward
                 a2_rewards += a2_reward
                 episode_steps += 1
+
                 if a1_done and a2_done:
                     break
 
