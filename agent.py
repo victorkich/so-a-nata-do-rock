@@ -1,5 +1,6 @@
 import torch
 import torch.optim as optim
+import numpy as np
 import torch.nn.functional as F
 import torch.nn as nn
 from torch.nn.utils import clip_grad_norm_
@@ -28,14 +29,14 @@ class SAC(nn.Module):
         self.gamma = 0.99
         self.tau = 0.005
         hidden_size = 256
-        learning_rate = 0.0003
+        learning_rate = 0.0001
         self.clip_grad_param = 1
 
-        self.target_entropy = -action_size  # -dim(A)
+        self.target_entropy = 0.98 * (-np.log(1 / self.action_size))  # -dim(A)
 
         self.log_alpha = torch.tensor([0.0], requires_grad=True)
         self.alpha = self.log_alpha.exp().detach()
-        self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=0.0000003)
+        self.alpha_optimizer = optim.Adam(params=[self.log_alpha], lr=learning_rate)
 
         # Actor Network
         self.actor_local = Actor(state_size, action_size, hidden_size).to(device)
