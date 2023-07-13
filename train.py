@@ -99,7 +99,7 @@ def train(config):
                        "Agent 1 Episode": i,
                        "Agent 1 Buffer size": a1_buffer.__len__()})
 
-            if a2_buffer.__len__() >= 20000:
+            if a2_buffer.__len__() >= 25000:
                 print("Agent 2 -- Episode: {} | Reward: {} | Policy Loss: {} | Steps: {}".format(i, a2_rewards,
                                                                                                  a2_policy_loss, steps))
                 wandb.log({"Agent 2 Reward": a2_rewards,
