@@ -18,7 +18,7 @@ def get_config():
     parser.add_argument("--seed", type=int, default=1, help="Seed, default: 1")
     parser.add_argument("--log_video", type=int, default=0, help="Log agent behaviour to wanbd when set to 1, default: 0")
     parser.add_argument("--save_every", type=int, default=100, help="Saves the network every x epochs, default: 25")
-    parser.add_argument("--batch_size", type=int, default=64, help="Batch size, default: 256")
+    parser.add_argument("--batch_size", type=int, default=128, help="Batch size, default: 256")
     
     args = parser.parse_args()
     return args
@@ -58,15 +58,18 @@ def train(config):
                 steps += 1
                 a1_next_state, a1_reward, a1_done = env.step(a1_action, robot_id=1)
                 a1_buffer.add(a1_state, a1_action, a1_reward, a1_next_state, a1_done)
-                if a1_buffer.__len__() >= 20000:
+                if a1_buffer.__len__() >= 25000:
                     a1_policy_loss, a1_alpha_loss, a1_bellmann_error1, a1_bellmann_error2, a1_current_alpha = a1.learn(
                         steps, a1_buffer.sample(), gamma=0.99)
+
+                if a1_done:
+                    break
 
                 a2_state = env.get_state(robot_id=2)
                 a2_action = a2.get_action(a2_state)
                 a2_next_state, a2_reward, a2_done = env.step(a2_action, robot_id=2)
                 a2_buffer.add(a2_state, a2_action, a2_reward, a2_next_state, a2_done)
-                if a2_buffer.__len__() >= 20000:
+                if a2_buffer.__len__() >= 25000:
                     a2_policy_loss, a2_alpha_loss, a2_bellmann_error1, a2_bellmann_error2, a2_current_alpha = a2.learn(
                         steps, a2_buffer.sample(), gamma=0.99)
 
@@ -74,14 +77,14 @@ def train(config):
                 a2_rewards += a2_reward
                 episode_steps += 1
 
-                if a1_done and a2_done:
+                if a2_done:
                     break
 
             a1_average10.append(a1_rewards)
             a2_average10.append(a2_rewards)
             total_steps += episode_steps
 
-            if a1_buffer.__len__() >= 20000:
+            if a1_buffer.__len__() >= 25000:
                 print("Agent 1 -- Episode: {} | Reward: {} | Policy Loss: {} | Steps: {}".format(i, a1_rewards,
                                                                                                  a1_policy_loss, steps))
                 wandb.log({"Agent 1 Reward": a1_rewards,
