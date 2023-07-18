@@ -202,7 +202,7 @@ class Environment:
         reward = -1
         # se conseguir completar tudo
         if done:
-            reward = 200
+            reward = 100
         # se bateu na parede ou no amiguinho
         elif collided:
             #done = True
@@ -238,21 +238,25 @@ class Environment:
             self.s_r1[self.target.pos[0]][self.target.pos[1]] = 3
         elif not self.robot1.spot:
             self.s_r1[self.target.pos[0]][self.target.pos[1]] = 4
-        else:
+        elif not self.robot1.delivered:
             self.s_r1[self.target.pos[0]][self.target.pos[1]] = 5
+        else:
+            self.s_r1[self.target.pos[0]][self.target.pos[1]] = 6
 
-        self.s_r1[self.robot1.pos[0]][self.robot1.pos[1]] = 6
-        self.s_r1[self.robot2.pos[0]][self.robot2.pos[1]] = 7
+        self.s_r1[self.robot1.pos[0]][self.robot1.pos[1]] = 7
+        self.s_r1[self.robot2.pos[0]][self.robot2.pos[1]] = 8
 
         if not self.robot2.ordered:
             self.s_r2[self.target.pos[0]][self.target.pos[1]] = 3
         elif not self.robot2.spot:
             self.s_r2[self.target.pos[0]][self.target.pos[1]] = 4
-        else:
+        elif not self.robot2.delivered:
             self.s_r2[self.target.pos[0]][self.target.pos[1]] = 5
+        else:
+            self.s_r2[self.target.pos[0]][self.target.pos[1]] = 6
 
-        self.s_r2[self.robot1.pos[0]][self.robot1.pos[1]] = 7
-        self.s_r2[self.robot2.pos[0]][self.robot2.pos[1]] = 6
+        self.s_r2[self.robot1.pos[0]][self.robot1.pos[1]] = 8
+        self.s_r2[self.robot2.pos[0]][self.robot2.pos[1]] = 7
 
         self.s_r1 = self.s_r1.flatten()
         self.s_r1 = np.append(self.s_r1, DIRECTIONS_ANN[self.robot1.direction])
@@ -276,14 +280,19 @@ class Environment:
     def reset(self):
         # Cria os robôs, o alvo e os pontos
         self.robot1 = Robot(self.get_random_position(1, BOARD_SIZE - 2), RED, RIGHT)
-        self.r2_pos = self.get_random_position(1, BOARD_SIZE - 2)
+        r2_pos = self.get_random_position(1, BOARD_SIZE - 2)
         # in order to not start at same position
-        while self.r2_pos == self.robot1.pos:
-            self.r2_pos = self.get_random_position(1, BOARD_SIZE - 2)
+        while r2_pos == self.robot1.pos:
+            r2_pos = self.get_random_position(1, BOARD_SIZE - 2)
         self.robot2 = Robot(self.r2_pos, BLUE, LEFT)
-        self.spot1 = Spot(self.get_random_position(2, BOARD_SIZE - 4), YELLOW)
-        self.spot2 = Spot(self.get_random_position(2, BOARD_SIZE - 4), YELLOW)
-        self.target = Target(self.get_random_position(0, BOARD_SIZE), GREEN)
+
+        self.spot1 = Spot(self.spot1.pos, YELLOW)
+        self.spot2 = Spot(self.spot2.pos, YELLOW)
+        self.target = Target(self.target.pos, GREEN)
+        
+        #self.spot1 = Spot(self.get_random_position(2, BOARD_SIZE - 4), YELLOW)
+        #self.spot2 = Spot(self.get_random_position(2, BOARD_SIZE - 4), YELLOW)
+        #self.target = Target(self.get_random_position(0, BOARD_SIZE), GREEN)
         self.update_states()
 
     def get_state(self, robot_id):
